@@ -1,0 +1,6 @@
+/errors
+__pycache__/
+venv/
+node_modules/
+.DS_Store
+students
