@@ -1,28 +1,11 @@
-import json
-from os import listdir
-from os.path import isfile, join, splitext
-
 import pandas as pd
 import pendulum
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 import requests
-import datetime
 
 def parse_file(file_path):
-    requests.post(
-        'http://192.168.0.105:13337/logJsonFiles',
-        json={
-            "name": file_path,
-            "response": "{}",
-            "created_at": datetime.datetime.now().isoformat()
-        },
-        headers={
-            "Content-Type": "application/json"
-        }
-    )
-
     required_fields = [
         "plan_type",
         "direction_id",
@@ -44,8 +27,10 @@ def parse_file(file_path):
         "selection_year",
     ]
     
-    file = requests.get(f'http://192.168.0.105:13338/{file_path}')
+    file = requests.get(f'http://192.168.1.38:13338/{file_path}')
     json_data = {**file.json(), 'disciplines_blocks': None}
+
+    print("[UP DESCRIPTION] Parse file:", file_path)
 
     is_all_required_fields = all([
         field in list(json_data.keys())
@@ -53,34 +38,13 @@ def parse_file(file_path):
     ])
 
     if not is_all_required_fields:
-        requests.post(
-            'http://192.168.0.105:13337/logJsonFiles',
-            json={
-                "name": file_path,
-                "response": "not all required fields, skipping",
-                "created_at": datetime.datetime.now().isoformat()
-            },
-            headers={
-                "Content-Type": "application/json"
-            }
-        )
+        print("[UP DESCRIPTION] Error: skipping file, not all required fields", file_path)
 
         return pd.DataFrame()
 
     df = pd.DataFrame([json_data])
     df = df.drop(['disciplines_blocks'], axis=1)
 
-    requests.post(
-        'http://192.168.0.105:13337/logJsonFiles',
-        json={
-            "name": file_path,
-            "response": df.to_json(),
-            "created_at": datetime.datetime.now().isoformat()
-        },
-        headers={
-            "Content-Type": "application/json"
-        }
-    )
     return df
 
 

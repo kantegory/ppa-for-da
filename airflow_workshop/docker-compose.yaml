@@ -45,6 +45,7 @@ services:
       - CONFIG_STORAGE_TOPIC=my_connect_configs
       - OFFSET_STORAGE_TOPIC=my_connect_offsets 
       - STATUS_STORAGE_TOPIC=my_connect_statuses 
+
   nocodb:
     links:
       - de-pg-cr-af
@@ -61,7 +62,7 @@ services:
     image: index.docker.io/appsmith/appsmith-ce
     links:
       - de-pg-cr-af
-    container_name: appsmith
+    container_name: appsmith2
     ports:
       - "19080:80"
     volumes:
